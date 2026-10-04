@@ -1,69 +1,25 @@
 # Romagnani Lab: HPC Cluster Guide
 
-> Last verified against the HPC portal: 2026-08-27
+> Last checked against the HPC portal: 2026-08-27
 
-The Romagnani lab uses the **BIH HPC cluster** for large analyses that would be too slow or impossible on a laptop. RStudio and JupyterLab run directly in your browser through a web portal. If you've never used a cluster before, this guide takes you through it from the very start.
-
-**Portal:** [hpc-portal.cubi.bihealth.org](https://hpc-portal.cubi.bihealth.org)
-
-If you run into problems:
-
-1. [BIH HPC documentation](https://hpc-docs.cubi.bihealth.org/)
-2. [Community forum](https://hpc-talk.cubi.bihealth.org/)
-3. Email Ollie — [oliver.knight@charite.de](mailto:oliver.knight@charite.de)
-4. HPC helpdesk — [hpc-helpdesk@bih-charite.de](mailto:hpc-helpdesk@bih-charite.de)
+We use the BIH HPC cluster for analyses too big for a laptop. RStudio and JupyterLab run in the browser through the portal: [hpc-portal.cubi.bihealth.org](https://hpc-portal.cubi.bihealth.org). No cluster experience needed.
 
 ---
 
-## Contents
+## 1. Get VPN access
 
-1. [Before you start](#1-before-you-start)
-2. [Get VPN access](#2-get-vpn-access)
-3. [Request an HPC account](#3-request-an-hpc-account)
-4. [Log in to the portal](#4-log-in-to-the-portal)
-5. [One-time setup](#5-one-time-setup-run-this-once)
-6. [Using RStudio Server](#6-using-rstudio-server)
-7. [Using JupyterLab](#7-using-jupyterlab)
-8. [Your file storage](#8-your-file-storage)
-9. [Running longer analyses](#9-running-longer-analyses)
-10. [Connecting via terminal (optional)](#10-connecting-via-terminal-optional)
-11. [Troubleshooting](#11-troubleshooting)
-12. [Getting help](#12-getting-help)
+The portal is only reachable over the Charité VPN.
 
----
+1. Fill in and sign both forms, scan them, and email them to **vpn@charite.de**, cc Chiara ([chiara.romagnani@charite.de](mailto:chiara.romagnani@charite.de)):
+   - [`01_VPN_antrag.pdf`](vpn/01_VPN_antrag.pdf): standard VPN application
+   - [`02_VPN_zusatzantrag_B.pdf`](vpn/02_VPN_zusatzantrag_B.pdf): supplement for HPC access
+2. Once approved, install OpenVPN: [macOS](vpn/install_VPN_macOS.pdf), [Windows](vpn/install_VPN_windows.pdf).
 
-## 1. Before you start
+Approval can take a few days, so send the forms early.
 
-You need:
+## 2. Request an HPC account
 
-- A **Charité computer account** (your normal Charité login)
-- **VPN access** if connecting from home or a personal computer — see step 2
-
----
-
-## 2. Get VPN access
-
-### Step 1: Fill in and sign both forms
-
-- [`01_VPN_antrag.pdf`](vpn/01_VPN_antrag.pdf) — the standard VPN application
-- [`02_VPN_zusatzantrag_B.pdf`](vpn/02_VPN_zusatzantrag_B.pdf) — the supplementary form required for HPC access
-
-Print both, sign them, scan them, and email the scans to **vpn@charite.de**, cc'ing Chiara ([chiara.romagnani@charite.de](mailto:chiara.romagnani@charite.de)).
-
-### Step 2: Install OpenVPN
-
-After VPN approval, install the client and configure your connection:
-
-- macOS: [`install_VPN_macOS.pdf`](vpn/install_VPN_macOS.pdf)
-- Windows: [`install_VPN_windows.pdf`](vpn/install_VPN_windows.pdf)
-
-> VPN approval can take a few days. Submit the forms as early as possible.
-
----
-
-## 3. Request an HPC account
-
-Send Ollie ([oliver.knight@charite.de](mailto:oliver.knight@charite.de)) a message with the following details, who will submit it to the CUBI team where your account is set up.
+Send Ollie ([oliver.knight@charite.de](mailto:oliver.knight@charite.de)) these details to pass on to CUBI:
 
 ```text
 - first name:
@@ -75,274 +31,157 @@ Send Ollie ([oliver.knight@charite.de](mailto:oliver.knight@charite.de)) a messa
 - AG: ag-romagnani
 ```
 
-Your username on the cluster will be your Charité username followed by `_c` — for example, `doej_c`.
+Your cluster username is your Charité username plus `_c`, e.g. `doej_c`.
 
----
+## 3. One-time setup
 
-## 4. Log in to the portal
-
-Go to **[hpc-portal.cubi.bihealth.org](https://hpc-portal.cubi.bihealth.org)** in your browser.
-
-> Requires Charité VPN.
-
-**Mac or personal computer:** Log in with your Charité username.
-
-Once logged in you'll see the dashboard. From here you can launch RStudio, JupyterLab, open a terminal, manage files, and monitor running jobs.
-
----
-
-## 5. One-time setup (run this once!)
-
-This script:
-
-- Creates folder shortcuts to prevent overfilling your 1 GB home directory
-- Installs pixi (environment manager used for RStudio and Jupyter)
-- Sets up an R 4.5.0 pixi environment for RStudio
-- Sets up a reticulate pixi environment (Python from R)
-- Optionally sets up a single-cell Jupyter pixi environment (scanpy, scvi-tools, GPU/torch)
-- Installs the RStudio and Jupyter portal apps into your account
-
-Steps:
-
-**1.** Log in to the portal and open a terminal: click **Clusters** in the top bar, then **\_cubi Shell Access**.
-
-**2.** Start an interactive compute session:
+Log in to the [portal](https://hpc-portal.cubi.bihealth.org) with your Charité username. Open a terminal via **Clusters → \_cubi Shell Access**, then start a compute session and run the setup script:
 
 ```sh
 srun --time 4:00:00 --mem 8G --pty bash -i
-```
-
-Your prompt changes when ready.
-
-**3.** Run the setup script:
-
-```sh
 bash /data/cephfs-2/unmirrored/groups/romagnani/work/bin/bih-cubi-romagnani/first_time_setup.sh
 ```
 
-If you also want the Jupyter single-cell environment (large, GPU/torch — worth skipping unless you use JupyterLab), add the flag:
+It asks before each step:
 
-```sh
-bash /data/cephfs-2/unmirrored/groups/romagnani/work/bin/bih-cubi-romagnani/first_time_setup.sh --include-jupyter
-```
+- move cache and config folders out of your 1 GB home directory
+- install [pixi](https://pixi.sh), which manages the R and Python environments
+- install the R 4.5.0 environment for RStudio (10–20 min)
+- install the reticulate Python environment (Python from R)
+- install the Jupyter single-cell environment (scanpy, scvelo; large, skip unless you use JupyterLab)
+- install the RStudio and Jupyter portal apps
 
-**4.** Answer the prompts. For a new account, say **y** to everything offered. The R 4.5.0 pixi environment step will take 10–20 minutes; the Jupyter environment (if included) considerably longer.
+On a new account, answer **y** to everything except Jupyter if you don't need it. Open a new terminal when it finishes. The script is safe to re-run and leaves environments you've already installed (and any packages you've added) alone.
 
-**5.** When it finishes, close the terminal tab and open a new one to apply the changes.
+## 4. RStudio
 
----
+**Interactive Apps → RStudio Server (Sandbox)**, then:
 
-## 6. Using RStudio Server
-
-**1.** Go to the portal and click **Interactive Apps** in the top bar, then **RStudio Server (Sandbox)**.
-
-**2.** Fill in the form:
-
-| Setting | What to enter |
+| Setting | Value |
 | --- | --- |
-| R environment source | **Pixi environment** (recommended) |
+| R environment source | Pixi environment |
 | Path to pixi project directory | `~/work/bin/pixi/R_4.5.0` |
-| Apptainer image | leave as-is |
-| Number of CPU cores | 8–16 (max 32) |
+| Apptainer image | leave as is |
+| CPU cores | 8–16 (max 32) |
 | Memory (GB) | 32–64 (max 128) |
-| Running time | `1d` for most sessions, `3d` for longer analyses |
-| Partition | **medium** |
+| Running time | `1d`, or `3d` for long analyses |
+| Partition | medium |
 
-**3.** Click **Launch**. The job will show as *Queued*, then *Starting*, then *Running*. Click **Connect to RStudio Server** when it's ready.
+Click **Launch**, wait until it says *Running*, then **Connect to RStudio Server**. Smaller requests start sooner.
 
-> Smaller requests queue faster.
-
-### Installing R packages
-
-For packages available through pixi, use the terminal inside RStudio (Tools → Terminal → New Terminal):
+Install conda packages from the RStudio terminal (Tools → Terminal → New Terminal):
 
 ```sh
-pixi add r-packagename   # e.g. pixi add r-ggplot2
+pixi add --manifest-path ~/work/bin/pixi/R_4.5.0 r-ggplot2
 ```
 
-For packages from GitHub or Bioconductor, use R directly:
+GitHub and Bioconductor packages install from R as usual (`remotes::install_github()`, `BiocManager::install()`).
 
-```r
-remotes::install_github("author/package")
-BiocManager::install("PackageName")
-```
-
-### Using Python from R (reticulate)
-
-Add this at the top of your script:
+To call Python from R:
 
 ```r
 library(reticulate)
-use_python('~/work/bin/pixi/r-reticulate/.pixi/envs/default/bin/python', required = TRUE)
+use_python("~/work/bin/pixi/r-reticulate/.pixi/envs/default/bin/python", required = TRUE)
 ```
 
----
+## 5. JupyterLab
 
-## 7. Using JupyterLab
+**Interactive Apps → Jupyter**, then:
 
-**1.** Go to the portal and click **Interactive Apps**, then **Jupyter**.
-
-**2.** Fill in the form:
-
-| Setting | What to enter |
+| Setting | Value |
 | --- | --- |
-| Python environment source | **Pixi environment** (recommended) |
+| Python environment source | Pixi environment |
 | Path to pixi project directory | `~/work/bin/pixi/jupyter` |
-| Jupyter Lab/Notebook | **Jupyter Lab** (recommended) |
-| Working directory | leave blank to start in your home folder |
-| Number of CPU cores | 4–8 |
+| Jupyter Lab/Notebook | Jupyter Lab |
+| Working directory | blank (starts in home) |
+| CPU cores | 4–8 |
 | Memory (GB) | 16–32 |
 | Running time | `1d` |
-| Partition | **medium** |
+| Partition | medium |
 
-**3.** Click **Launch**, wait for status *Running*, then click **Connect to Jupyter**.
+Click **Launch**, wait for *Running*, then **Connect to Jupyter**.
 
----
+## 6. Storage
 
-## 8. Your file storage
+Home is only 1 GB. Keep data out of it.
 
-**Your home directory has only 1 GB.** The setup script moves large cache folders elsewhere.
+| Shortcut | Path | Use for | Size | Auto-deleted |
+| --- | --- | --- | --- | --- |
+| `~/` | `/data/cephfs-1/home/users/<user>` | config, symlinks | 1 GB | no |
+| `~/work/` | `/data/cephfs-1/work/groups/romagnani/users/<user>` | software, scripts, results | 1 TB | no |
+| `~/scratch/` | `/data/cephfs-1/scratch/groups/romagnani/users/<user>` | pipeline runs, temp files | 10 TB | **after 14 days** |
+| `~/group/` | `/data/cephfs-2/unmirrored/groups/romagnani` | shared tools, reference genomes | 10 TB | no |
+| `~/share/` | `/data/cephfs-2/unmirrored/projects/romagnani-share` | data shared across projects | 1 TB | no |
 
-| Location | Shortcut | Full path | What to put there | Size limit | Auto-deleted? |
-| --- | --- | --- | --- | --- | --- |
-| Home | `~/` | `/data/cephfs-1/home/users/<user>` | Symlinks only, config files | **1 GB** | No |
-| Work | `~/work/` | `/data/cephfs-1/work/groups/romagnani/users/<user>/work` | Software, personal data, scripts | 1 TB | No |
-| Scratch | `~/scratch/` | `/data/cephfs-1/scratch/groups/romagnani` | Temporary files, pipeline runs | 10 TB | **Yes — 14 days** |
-| Group | `~/group/` | `/data/cephfs-2/unmirrored/groups/romagnani` | Shared tools, reference genomes | 10 TB | No |
-| Share | `~/share/` | `/data/cephfs-2/unmirrored/projects/share` | Cross-project shared data | 1 TB | No |
-
-Rules of thumb:
-
-- Avoid saving large files directly to `~/` — with only 1 GB to work with, it fills up fast and things start failing
-- Run pipelines and large datasets in `~/scratch/`, but files delete after 14 days
-- Finished results go in `~/work/`
-- Reference genomes and shared tools live in `~/group/`
-
-Since August 2026, the scratch cleanup also removes **empty directories** that haven't been touched in 14 days (not just files). If you have a folder structure in `~/scratch/` you want to keep even when temporarily empty (e.g. a pipeline's output directory between runs), protect it with:
+Scratch cleanup also deletes empty directories untouched for 14 days. To keep one, add a marker file (files inside still expire as normal):
 
 ```sh
 touch ~/scratch/path/to/folder/.keepdir
 ```
 
-This only stops the *folder* being deleted — files inside it still follow the normal 14-day rule.
+## 7. Long-running work
 
----
-
-## 9. Running longer analyses
-
-Use **tmux** for analyses longer than a few minutes; sessions survive browser closure.
-
-Start a tmux session:
+Run interactive work inside `tmux` so it survives closing the browser:
 
 ```sh
 tmux new -s work
+srun --time 48:00:00 --cpus-per-task 16 --mem 64G --pty bash -i
 ```
 
-Then start a compute session inside tmux:
+Detach with `Ctrl+b` then `d`, re-attach with `tmux a -t work`, list sessions with `tmux ls`.
 
-```sh
-srun --time 48:00:00 --ntasks 16 --mem 64G --pty bash -i
-```
+For jobs that run overnight or for days, submit with `sbatch`. See the [SLURM docs](https://hpc-docs.cubi.bihealth.org/slurm/overview/).
 
-This requests 48 hours, 16 CPU cores, and 64 GB RAM. Adjust as needed.
+## 8. SSH access (optional)
 
-**Detach** (session keeps running): `Ctrl+b`, then `d`  
-**Re-attach:** `tmux a -t work`  
-**List sessions:** `tmux ls`
-
-For analyses running overnight or for days, use batch jobs with `sbatch`. See the [SLURM documentation](https://hpc-docs.cubi.bihealth.org/slurm/overview/), or just ask me.
-
----
-
-## 10. Connecting via terminal (optional)
-
-Useful for file transfers and running pipelines directly.
+Useful for file transfers and running pipelines from your own terminal.
 
 <details>
-<summary>Show terminal connection instructions</summary>
+<summary>Setup</summary>
 
-### Step 1: Generate an SSH key
+1. Create a key: `ssh-keygen -t ed25519` (default location, set a passphrase).
+2. Copy the contents of `~/.ssh/id_ed25519.pub` into [zugang.charite.de](https://zugang.charite.de) → **SSH Keys** → **Append**.
+3. Add this to `~/.ssh/config`, replacing `username_c`:
 
-Open a terminal on your computer and run:
+   ```text
+   Host cubi
+       HostName hpc-login-1.cubi.bihealth.org
+       User username_c
+       ForwardAgent yes
+       ForwardX11 yes
 
-```sh
-ssh-keygen -t ed25519
-```
+   Host cubi2
+       HostName hpc-login-2.cubi.bihealth.org
+       User username_c
+       ForwardAgent yes
+       ForwardX11 yes
+   ```
 
-Accept the default file location (press Enter). Set a strong passphrase.
+4. Connect with `ssh-add && ssh cubi`.
 
-### Step 2: Register your key with Charité
-
-1. Find your public key file: `~/.ssh/id_ed25519.pub`
-2. Open it with a text editor and copy the contents
-3. Go to [zugang.charite.de](https://zugang.charite.de) and log in
-4. Click **SSH Keys**, paste your key, and click **Append**
-
-### Step 3: Create an SSH config shortcut
-
-Create (or edit) `~/.ssh/config` and add:
-
-```text
-Host cubi
-    ForwardAgent yes
-    ForwardX11 yes
-    HostName hpc-login-1.cubi.bihealth.org
-    User username_c
-    RequestTTY yes
-
-Host cubi2
-    ForwardAgent yes
-    ForwardX11 yes
-    HostName hpc-login-2.cubi.bihealth.org
-    User username_c
-    RequestTTY yes
-```
-
-Replace `username_c` with your Charité username followed by `_c`.
-
-### Step 4: Connect
+Login nodes are shared, so don't run analyses on them: start an `srun` session first. Use the transfer nodes for large copies:
 
 ```sh
-ssh-add
-ssh cubi
-```
-
-> You'll land on a **login node** — this is shared with everyone else on the cluster, so please don't run analyses directly here. Start a compute session with `srun` first.
-
-### Transferring files
-
-Use the transfer nodes (not the login nodes) for large file transfers:
-
-```sh
-scp localfile.txt username_c@hpc-transfer-1.cubi.bihealth.org:/data/cephfs-1/work/...
+scp file.txt username_c@hpc-transfer-1.cubi.bihealth.org:~/work/
 ```
 
 </details>
 
----
+## 9. Troubleshooting
 
-## 11. Troubleshooting
+**Portal won't load.** Check the VPN is connected. Some on-site buildings need it too.
 
-**Portal won't load, or hangs on login.**
-Check you're connected to Charité VPN (step 2); the portal is only reachable over it, even on-site in some buildings.
+**`Permission denied (publickey)` on `ssh cubi`.** Check the key is saved at [zugang.charite.de](https://zugang.charite.de), wait a few minutes, retry.
 
-**`ssh cubi` fails with `Permission denied (publickey)`.**
-Your key isn't registered yet, or hasn't propagated. Confirm it's pasted correctly at [zugang.charite.de](https://zugang.charite.de) → SSH Keys, then wait a few minutes and retry.
+**`srun` stuck in `PENDING`.** The partition is busy. Ask for fewer cores, less memory or a shorter `--time`. Check with `squeue --me`.
 
-**`srun` hangs in `PENDING`.**
-The partition is busy. Try a smaller request (fewer cores/memory), a shorter `--time`, or wait — check queue state with `squeue --me`.
+**Setup script says `pixi install` failed.** Usually a network hiccup. Re-run the script.
 
-**One-time setup script reports `pixi install failed`.**
-Transient — network hiccup or a slow mirror. Just re-run the same command; it's safe to run repeatedly and skips what's already installed.
+**`No space left on device` in your home directory.** Move large files to `~/work/` or `~/scratch/`.
 
-**`No space left on device`, or writes failing in your home directory.**
-You're saving large files to `~/` directly. Move them to `~/work/` (persistent) or `~/scratch/` (14-day auto-delete) — see [file storage](#8-your-file-storage).
+## 10. Help
 
----
-
-## 12. Getting help
-
-1. **BIH HPC documentation:** [hpc-docs.cubi.bihealth.org](https://hpc-docs.cubi.bihealth.org/)
-2. **Community forum:** [hpc-talk.cubi.bihealth.org](https://hpc-talk.cubi.bihealth.org/) — post questions, search past issues
-3. **Ollie:** [oliver.knight@charite.de](mailto:oliver.knight@charite.de)
-4. **HPC helpdesk:** [hpc-helpdesk@bih-charite.de](mailto:hpc-helpdesk@bih-charite.de) — for account issues, access problems, hardware faults
+1. [BIH HPC docs](https://hpc-docs.cubi.bihealth.org/)
+2. [HPC forum](https://hpc-talk.cubi.bihealth.org/)
+3. Ollie: [oliver.knight@charite.de](mailto:oliver.knight@charite.de)
+4. HPC helpdesk (accounts, access, hardware): [hpc-helpdesk@bih-charite.de](mailto:hpc-helpdesk@bih-charite.de)
